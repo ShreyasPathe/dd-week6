@@ -8,6 +8,7 @@
     "dev": "shopify hydrogen dev --codegen",
     "build": "shopify hydrogen build --codegen",
     "preview": "npm run build && shopify hydrogen preview",
+    "start": "shopify hydrogen preview --port $PORT",
     "e2e": "npx playwright test",
     "e2e:ui": "npx playwright test --ui",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
