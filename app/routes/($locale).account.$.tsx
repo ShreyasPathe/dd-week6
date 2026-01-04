@@ -1,9 +1,10 @@
-import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import { redirect, type LoaderFunctionArgs } from '@shopify/remix-oxygen';
 
-// fallback wild card for all unauthenticated routes in account section
-export async function loader({context, params}: LoaderFunctionArgs) {
-  await context.customerAccount.handleAuthStatus();
+export async function loader({ context }: LoaderFunctionArgs) {
+  const shopDomain = context.env.PUBLIC_STORE_DOMAIN;
+  return redirect(`https://${shopDomain}/account/login`);
+}
 
-  const locale = params.locale;
-  return redirect(locale ? `/${locale}/account` : '/account');
+export default function AccountCatchAll() {
+  return null;
 }

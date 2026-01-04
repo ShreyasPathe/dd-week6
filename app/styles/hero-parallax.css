@@ -1,0 +1,167 @@
+/* ========================================
+   HERO PARALLAX - CORE STYLES
+   ======================================== */
+
+/* Section */
+.hero-parallax-section-custom {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 700px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: #000000;
+}
+
+/* Background - z-index: 1 */
+.parallax-bg-layer-custom {
+    position: absolute;
+    top: -30%;
+    left: 0;
+    width: 100%;
+    height: 160%;
+    z-index: 1;
+    will-change: transform;
+}
+
+.hero-bg-image-custom {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.bg-initial-custom {
+    opacity: 0;
+    transform: scale(1.1);
+}
+
+.bg-animate-custom {
+    animation: zoomInFadeCustom 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes zoomInFadeCustom {
+    from {
+        opacity: 0;
+        transform: scale(1.15);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Gradient - z-index: 2 */
+.gradient-overlay-custom {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.65) 50%, rgba(0, 0, 0, 0.8) 100%);
+    z-index: 2;
+}
+
+.overlay-initial-custom {
+    opacity: 0;
+}
+
+.overlay-animate-custom {
+    animation: fadeInCustom 2s ease-out 0.5s forwards;
+}
+
+@keyframes fadeInCustom {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Content - z-index: 20 (HIGHEST) */
+.parallax-content-layer-custom {
+    position: relative;
+    z-index: 20;
+    text-align: center;
+    color: #ffffff;
+    max-width: 950px;
+    width: 90%;
+    padding: 3rem 1.5rem;
+    will-change: transform;
+}
+
+/* Typography Base Styles */
+.hero-heading-custom {
+    font-size: clamp(2.2rem, 6vw, 4.8rem);
+    font-weight: 900;
+    line-height: 1.15;
+    margin-bottom: 1.8rem;
+    text-shadow: 3px 5px 25px rgba(0, 0, 0, 0.8);
+    letter-spacing: -0.01em;
+    color: #ffffff;
+}
+
+.hero-subheading-custom {
+    font-size: clamp(0.95rem, 2vw, 1.15rem);
+    line-height: 1.7;
+    text-shadow: 2px 3px 15px rgba(0, 0, 0, 0.8);
+    font-weight: 400;
+    max-width: 700px;
+    margin: 0 auto 2.8rem;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.hero-cta-custom {
+    margin-top: 2.5rem;
+}
+
+/* Performance */
+.parallax-bg-layer-custom,
+.parallax-content-layer-custom {
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .hero-parallax-section-custom {
+        min-height: 650px;
+    }
+
+    .parallax-content-layer-custom {
+        padding: 2rem 1rem;
+    }
+
+    .bg-animate-custom {
+        animation-duration: 1.5s;
+    }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .hero-parallax-section-custom {
+        height: 100vh;
+    }
+}
+
+/* Ultra-wide */
+@media (min-width: 1920px) {
+    .parallax-content-layer-custom {
+        max-width: 1100px;
+    }
+}
+
+/* Print */
+@media print {
+    .hero-parallax-section-custom {
+        height: auto;
+        min-height: 500px;
+        page-break-inside: avoid;
+    }
+}

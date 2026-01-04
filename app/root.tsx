@@ -3,7 +3,7 @@ import {
   type LinksFunction,
   type LoaderFunctionArgs,
   type AppLoadContext,
-  type MetaArgs,
+  type MetaFunction,
 } from '@shopify/remix-oxygen';
 import {
   isRouteErrorResponse,
@@ -25,14 +25,15 @@ import {
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
-import {PageLayout} from '~/components/PageLayout';
-import {GenericError} from '~/components/GenericError';
-import {NotFound} from '~/components/NotFound';
+import { PageLayout } from '~/components/PageLayout';
+import { GenericError } from '~/components/GenericError';
+import { NotFound } from '~/components/NotFound';
 import favicon from '~/assets/favicon.svg';
-import {seoPayload} from '~/lib/seo.server';
+import { seoPayload } from '~/lib/seo.server';
 import styles from '~/styles/app.css?url';
+import heroParallaxStyles from '~/styles/hero-parallax.css?url';
 
-import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
+import { DEFAULT_LOCALE, parseMenu } from './lib/utils';
 
 export type RootLoader = typeof loader;
 
@@ -55,15 +56,6 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   return false;
 };
 
-/**
- * The link to the main stylesheet is purposely not in this list. Instead, it is added
- * in the Layout function.
- *
- * This is to avoid a development bug where after an edit/save, navigating to another
- * link will cause page rendering error "failed to execute 'insertBefore' on 'Node'".
- *
- * This is a workaround until this is fixed in the foundational library.
- */
 export const links: LinksFunction = () => {
   return [
     {
@@ -74,7 +66,25 @@ export const links: LinksFunction = () => {
       rel: 'preconnect',
       href: 'https://shop.app',
     },
-    {rel: 'icon', type: 'image/svg+xml', href: favicon},
+    { rel: 'icon', type: 'image/svg+xml', href: favicon },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.googleapis.com',
+    },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.gstatic.com',
+      crossOrigin: 'anonymous',
+    },
+    {
+      href: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap',
+      rel: 'stylesheet',
+    },
+    // Hero Parallax Styles
+    {
+      rel: 'stylesheet',
+      href: heroParallaxStyles,
+    },
   ];
 };
 
@@ -95,30 +105,35 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({request, context}: LoaderFunctionArgs) {
-  const [layout] = await Promise.all([
-    getLayoutData(context),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+async function loadCriticalData({ request, context }: LoaderFunctionArgs) {
+  try {
+    const [layout] = await Promise.all([
+      getLayoutData(context),
+      // Add other queries here, so that they are loaded in parallel
+    ]);
 
-  const seo = seoPayload.root({shop: layout.shop, url: request.url});
+    const seo = seoPayload.root({ shop: layout.shop, url: request.url });
 
-  const {storefront, env} = context;
+    const { storefront, env } = context;
 
-  return {
-    layout,
-    seo,
-    shop: getShopAnalytics({
-      storefront,
-      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
-    }),
-    consent: {
-      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
-      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      withPrivacyBanner: true,
-    },
-    selectedLocale: storefront.i18n,
-  };
+    return {
+      layout,
+      seo,
+      shop: getShopAnalytics({
+        storefront,
+        publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
+      }),
+      consent: {
+        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+        withPrivacyBanner: true,
+      },
+      selectedLocale: storefront.i18n,
+    };
+  } catch (error) {
+    console.error('Error loading critical data:', error);
+    throw error;
+  }
 }
 
 /**
@@ -126,8 +141,8 @@ async function loadCriticalData({request, context}: LoaderFunctionArgs) {
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({context}: LoaderFunctionArgs) {
-  const {cart, customerAccount} = context;
+function loadDeferredData({ context }: LoaderFunctionArgs) {
+  const { cart, customerAccount } = context;
 
   return {
     isLoggedIn: customerAccount.isLoggedIn(),
@@ -135,11 +150,19 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
   };
 }
 
-export const meta = ({data}: MetaArgs<typeof loader>) => {
-  return getSeoMeta(data!.seo as SeoConfig);
+// Fixed meta function with proper null checking
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  if (!data || !data.seo) {
+    return [
+      { title: 'Run The City Shoes' },
+      { description: 'Premium running shoes store' },
+    ];
+  }
+
+  return getSeoMeta(data.seo as SeoConfig);
 };
 
-function Layout({children}: {children?: React.ReactNode}) {
+function Layout({ children }: { children?: React.ReactNode }) {
   const nonce = useNonce();
   const data = useRouteLoaderData<typeof loader>('root');
   const locale = data?.selectedLocale ?? DEFAULT_LOCALE;
@@ -186,7 +209,7 @@ export default function App() {
   );
 }
 
-export function ErrorBoundary({error}: {error: Error}) {
+export function ErrorBoundary() {
   const routeError = useRouteError();
   const isRouteError = isRouteErrorResponse(routeError);
 
@@ -206,12 +229,14 @@ export function ErrorBoundary({error}: {error: Error}) {
             <NotFound type={pageType} />
           ) : (
             <GenericError
-              error={{message: `${routeError.status} ${routeError.data}`}}
+              error={{ message: `${routeError.status} ${routeError.data}` }}
             />
           )}
         </>
       ) : (
-        <GenericError error={error instanceof Error ? error : undefined} />
+        <GenericError
+          error={routeError instanceof Error ? routeError : undefined}
+        />
       )}
     </Layout>
   );
@@ -273,7 +298,7 @@ const LAYOUT_QUERY = `#graphql
   }
 ` as const;
 
-async function getLayoutData({storefront, env}: AppLoadContext) {
+async function getLayoutData({ storefront, env }: AppLoadContext) {
   const data = await storefront.query(LAYOUT_QUERY, {
     variables: {
       headerMenuHandle: 'main-menu',
@@ -292,25 +317,25 @@ async function getLayoutData({storefront, env}: AppLoadContext) {
       - /blog/news/blog-post -> /news/blog-post
       - /collections/all -> /products
   */
-  const customPrefixes = {BLOG: '', CATALOG: 'products'};
+  const customPrefixes = { BLOG: '', CATALOG: 'products' };
 
   const headerMenu = data?.headerMenu
     ? parseMenu(
-        data.headerMenu,
-        data.shop.primaryDomain.url,
-        env,
-        customPrefixes,
-      )
+      data.headerMenu,
+      data.shop.primaryDomain.url,
+      env,
+      customPrefixes,
+    )
     : undefined;
 
   const footerMenu = data?.footerMenu
     ? parseMenu(
-        data.footerMenu,
-        data.shop.primaryDomain.url,
-        env,
-        customPrefixes,
-      )
+      data.footerMenu,
+      data.shop.primaryDomain.url,
+      env,
+      customPrefixes,
+    )
     : undefined;
 
-  return {shop: data.shop, headerMenu, footerMenu};
+  return { shop: data.shop, headerMenu, footerMenu };
 }
